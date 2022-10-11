@@ -1,0 +1,42 @@
+# 02
+# Basic Query
+SELECT
+  *
+FROM
+  nyctaxi.2018trips
+ORDER BY
+  fare_amount DESC
+LIMIT  5
+
+# 03 Ingest a new dataset from GCP Cloud Storage
+# In Cloud Shell - this appends to existing table loaded
+bq load \
+--source_format=CSV \
+--autodetect \
+--noreplace  \
+nyctaxi.2018trips \
+gs://cloud-training/OCBL013/nyc_tlc_yellow_trips_2018_subset_2.csv
+
+# 04 Create Tables from other tables with DDL
+# Create a new table with in Query Editor with:
+CREATE TABLE
+  nyctaxi.january_trips AS
+SELECT
+  *
+FROM
+  nyctaxi.2018trips
+WHERE
+  EXTRACT(Month
+  FROM
+    pickup_datetime)=1;
+
+# Find longest trip in January
+#standardSQL
+SELECT
+  *
+FROM
+  nyctaxi.january_trips
+ORDER BY
+  trip_distance DESC
+LIMIT
+  1

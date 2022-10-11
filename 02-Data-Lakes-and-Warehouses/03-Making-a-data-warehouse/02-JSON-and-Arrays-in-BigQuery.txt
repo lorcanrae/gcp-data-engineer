@@ -1,0 +1,83 @@
+# Practice working with Arrays
+
+# 03 Create arrays with ARRAY_AGG()
+# Explore - this is public dataset, returns 111 rows
+SELECT
+  fullVisitorId,
+  date,
+  v2ProductName,
+  pageTitle
+  FROM `data-to-insights.ecommerce.all_sessions`
+WHERE visitId = 1501570398
+ORDER BY date
+
+# Using ARRAY_AGG(), returns 2 rows
+SELECT
+  fullVisitorId,
+  date,
+  ARRAY_AGG(v2ProductName) AS products_viewed,
+  ARRAY_AGG(pageTitle) AS pages_viewed
+  FROM `data-to-insights.ecommerce.all_sessions`
+WHERE visitId = 1501570398
+GROUP BY fullVisitorId, date
+ORDER BY date
+
+# Use ARRAY_LENGTH() to count number of products and pages viewed
+SELECT
+  fullVisitorId,
+  date,
+  ARRAY_AGG(v2ProductName) AS products_viewed,
+  ARRAY_LENGTH(ARRAY_AGG(v2ProductName)) AS num_products_viewed,
+  ARRAY_AGG(pageTitle) AS pages_viewed,
+  ARRAY_LENGTH(ARRAY_AGG(pageTitle)) AS num_pages_viewed
+  FROM `data-to-insights.ecommerce.all_sessions`
+WHERE visitId = 1501570398
+GROUP BY fullVisitorId, date
+ORDER BY date
+
+# Duplicate products and pages to count unique products viewed
+SELECT
+  fullVisitorId,
+  date,
+  ARRAY_AGG(DISTINCT v2ProductName) AS products_viewed,
+  ARRAY_LENGTH(ARRAY_AGG(DISTINCT v2ProductName)) AS distinct_products_viewed,
+  ARRAY_AGG(DISTINCT pageTitle) AS pages_viewed,
+  ARRAY_LENGTH(ARRAY_AGG(DISTINCT pageTitle)) AS distinct_pages_viewed
+  FROM `data-to-insights.ecommerce.all_sessions`
+WHERE visitId = 1501570398
+GROUP BY fullVisitorId, date
+ORDER BY date
+
+# 04. Query dataset that already has Arrays
+SELECT
+  *
+FROM `bigquery-public-data.google_analytics_sample.ga_sessions_20170801`
+WHERE visitId = 1501570398
+
+# Query the visit and page name fields like we did before
+SELECT
+  visitId,
+  hits.page.pageTitle
+FROM `bigquery-public-data.google_analytics_sample.ga_sessions_20170801`
+WHERE visitId = 1501570398
+# Does not work because before you can query REPEATED fields (arrays), the arrays need to be broken back into rows first
+
+# Using UNNEST() to make the previous query work
+SELECT DISTINCT
+  visitId,
+  h.page.pageTitle
+FROM `bigquery-public-data.google_analytics_sample.ga_sessions_20170801`,
+UNNEST(hits) AS h
+WHERE visitId = 1501570398
+LIMIT 10
+
+# 05. Using STRUCTS allows you to run queries like so without joins
+SELECT
+  visitId,
+  totals.*,
+  device.*
+FROM `bigquery-public-data.google_analytics_sample.ga_sessions_20170801`
+WHERE visitId = 1501570398
+LIMIT 10
+# Note: The `.*` syntax tells BigQuery to return all fields for that STRUCT
+# (much like it would if totals.* was a separate table we joined against)
